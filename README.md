@@ -31,7 +31,7 @@ snapshots and backups, as well as from the command line (e.g. for
 instantly creating additional snapshots).
 
 
-###Upgrading from v0.22.2
+### Upgrading from v0.22.2
 
 Please read the [upgrade guide](doc/upgrade_to_v0.23.0.md) if you are
 updating from btrbk <= v0.22.2.
@@ -51,10 +51,12 @@ Prerequisites
   * [btrfs-progs]: Btrfs filesystem utilities >= v3.18.2
   * [Perl interpreter]: Probably already installed on your system
   * [OpenSSH]: If you want to transfer backups from/to remote locations
+  * [Pipe Viewer]: If you want rate limiting and progress bars
 
   [btrfs-progs]: http://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/
   [Perl interpreter]: https://www.perl.org
   [OpenSSH]: http://www.openssh.org
+  [Pipe Viewer]: http://www.ivarch.com/programs/pv.shtml
 
 
 Instructions
@@ -83,6 +85,13 @@ btrbk is in portage:
 btrbk is in `stretch (testing) (utils)`: https://packages.debian.org/stretch/btrbk
 
 Packages are also available via NeuroDebian: http://neuro.debian.net/pkgs/btrbk.html
+
+
+### Fedora Linux
+
+btrbk is in the official Fedora repos: https://apps.fedoraproject.org/packages/btrbk
+
+    sudo dnf install btrbk
 
 
 ### Arch Linux
@@ -121,7 +130,7 @@ When playing around with config-files, it is highly recommended to
 check the output using the `dryrun` command before executing the
 backups:
 
-    btrbk -c myconfig -v dryrun
+    btrbk -c /path/to/myconfig -v dryrun
 
 This will read all btrfs information on the source/target filesystems
 and show what actions would be performed (without writing anything to
@@ -135,17 +144,21 @@ Example: laptop with usb-disk for backups
 
 In this example, we assume you have a laptop with:
 
-  * a disk having a btrfs volume mounted as `/mnt/btr_pool`,
-    containing a subvolume `rootfs` for the root filesystem and a
-    subvolume `home` for the user data.
+  * a disk having a btrfs root subvolume (subvolid=5) mounted on
+    `/mnt/btr_pool`, containing a subvolume `rootfs` for the root
+    filesystem (i.e. mounted on `/`) and a subvolume `home` for the
+    user data,
+  * a directory or subvolume `/mnt/btr_pool/btrbk_snapshots` which
+    will hold the btrbk snapshots,
   * a backup disk having a btrfs volume mounted as `/mnt/btr_backup`,
-    containing a subvolume `mylaptop` for the incremental backups.
+    containing a subvolume or directory `mylaptop` for the incremental
+    backups.
 
 Retention policy:
 
   * keep all snapshots for 2 days, no matter how frequently you (or
     your cron-job) run btrbk
-  * keep latest daily snapshots for 14 days (very handy if you are on
+  * keep daily snapshots for 14 days (very handy if you are on
     the road and the backup disk is not attached)
   * keep monthly backups forever
   * keep weekly backups for 10 weeks
@@ -431,6 +444,12 @@ to be done manually. In the examples below, we assume that you have a
 btrfs volume mounted at `/mnt/btr_pool`, and the subvolume you want to
 have restored is at `/mnt/btr_pool/data`.
 
+**Important**: don't use `btrfs property set` to make a subvolume
+read-write after restoring. This is a low-level command, and leaves
+"Received UUID" in a false state which causes btrbk to fail on
+subsequent incremental backups. Instead, use `btrfs subvolume
+snapshot` (without `-r` flag) as described below.
+
 
 Example: Restore a Snapshot
 -----------------------------
@@ -491,6 +510,17 @@ FAQ
 
 Make sure to also read the [btrbk FAQ page](doc/FAQ.md).
 Help improve it by asking!
+
+
+Donate
+======
+
+So btrbk saved your day?
+
+I will definitively continue developing btrbk for free, but if you
+want to support me you can do so:
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WFQSSCD9GNM4S)
 
 
 Development
